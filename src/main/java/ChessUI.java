@@ -1,0 +1,136 @@
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
+
+import java.util.List;
+
+public class ChessUI extends Application {
+
+    private static final int TILE_SIZE = 80;
+
+    private final MoveGenerator generator = new MoveGenerator();
+    private final MoveMaker maker = new MoveMaker();
+
+    private final GridPane boardGrid = new GridPane();
+    private Position position = new Position();
+    private List<Move> moves;
+    private int moveIndex = 0;
+
+    @Override
+    public void start(Stage stage) {
+
+        drawBoard(position);
+
+        Button nextMove = new Button("Next Move");
+        nextMove.setOnAction(e -> playNextMove());
+
+        VBox root = new VBox(boardGrid, nextMove);
+
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.setTitle("Chess Engine Viewer");
+        stage.show();
+
+        MoveGenerator generator = new MoveGenerator();
+        moves = generator.generateMove(position);
+    }
+
+    private int generateRandomMove(int moveIndex, List<Move> moves) {
+        int randomNum;
+        return (int)(Math.random() * moves.size()); // 0 to move list
+    }
+
+    private void drawBoard(Position position) {
+
+        boardGrid.getChildren().clear();
+
+        for (int rank = 0; rank < 8; rank++) {
+            for (int file = 0; file < 8; file++) {
+
+                StackPane tile = new StackPane();
+
+                boolean light = (rank + file) % 2 == 0;
+
+                Rectangle square = new Rectangle(TILE_SIZE, TILE_SIZE);
+                square.setFill(light ? Color.BEIGE : Color.BROWN);
+
+
+                square.setViewOrder(1);
+
+                tile.getChildren().add(square);
+
+                char piece = position.getPiece(rank, file);
+
+                if (piece != '.') {
+
+                    String path = getImagePath(piece);
+                    var stream = getClass().getResourceAsStream("/" + path);
+
+                    if (stream == null) {
+                        System.out.println("Missing image: " + path);
+                        continue;
+                    }
+
+                    ImageView img = new ImageView(new Image(stream));
+
+                    img.setFitWidth(TILE_SIZE);
+                    img.setFitHeight(TILE_SIZE);
+                    img.setPreserveRatio(true);
+
+                    img.setViewOrder(0);
+
+                    tile.getChildren().add(img);
+                }
+
+                tile.setPrefSize(TILE_SIZE, TILE_SIZE);
+
+                boardGrid.add(tile, file, rank);
+            }
+        }
+    }
+
+    private void playNextMove() {
+        System.out.println("Button Clicked");
+        if (moveIndex >= moves.size()){
+            System.out.println("No More Moves :)");
+            return;
+        }
+
+        Move move = moves.get(generateRandomMove(moveIndex, moves));
+        System.out.println(move);
+        position = maker.makeMove(position, move);
+
+        // IMPORTANT: regenerate moves for new position
+        moves = generator.generateMove(position);
+
+        drawBoard(position);
+    }
+
+    private String getImagePath(char piece) {
+
+        String type = switch (Character.toLowerCase(piece)) {
+            case 'k' -> "king";
+            case 'q' -> "queen";
+            case 'r' -> "rook";
+            case 'b' -> "bishop";
+            case 'n' -> "knight";
+            case 'p' -> "pawn";
+            default -> null;
+        };
+
+        if (type == null) return null;
+
+        String color = Character.isUpperCase(piece) ? "white" : "black";
+
+        return "pieces/" + color + "-" + type + ".png";
+    }
+}
