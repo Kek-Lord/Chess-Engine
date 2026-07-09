@@ -29,9 +29,7 @@ public class MoveMaker {
             pieceToPlace = move.getPromotionPiece();
         }
 
-        // ----------------------------
-        // EN PASSANT CAPTURE HANDLING
-        // ----------------------------
+        //en passant capture handling
         if (move.isEnPassant()) {
 
             int toRank = move.getToRank();
@@ -55,9 +53,7 @@ public class MoveMaker {
                 pieceToPlace
         );
 
-        // ----------------------------
-        // CASTLING HANDLING
-        // ----------------------------
+        // castling
         if (piece == 'K') {
 
             if (move.getFromFile() == 4 && move.getToFile() == 6) {
@@ -84,123 +80,9 @@ public class MoveMaker {
             }
         }
 
-        // ----------------------------
-        // CASTLING RIGHTS UPDATE
-        // ----------------------------
         updateCastlingRights(copy, piece, move, captured);
 
-        // ----------------------------
-        // EN PASSANT SQUARE UPDATE
-        // ----------------------------
-        copy.setEnPassantSquare(-1);
-
-        if (piece == 'P' || piece == 'p') {
-
-            int fromRank = move.getFromRank();
-            int toRank = move.getToRank();
-
-            // double pawn push
-            if (Math.abs(fromRank - toRank) == 2) {
-
-                int epRank = (fromRank + toRank) / 2;
-                int epFile = move.getFromFile();
-
-                copy.setEnPassantSquare(epRank * 8 + epFile);
-            }
-        }
-
-        // switch side
-        copy.setWhiteToMove(!copy.isWhiteToMove());
-
-        return copy;
-    }
-
-    private Position unmakeMove(Position position, Move move) {
-        Position copy = new Position(position);
-
-        char captured = copy.getPiece(
-                move.getFromRank(),
-                move.getFromFile()
-        );
-
-        char piece = copy.getPiece(
-                move.getToRank(),
-                move.getToFile()
-        );
-
-        // clear from-square
-        copy.setPiece(
-                move.getToRank(),
-                move.getToFile(),
-                '.'
-        );
-
-        char pieceToPlace = piece;
-
-        if (move.isPromotionMove()) {
-            pieceToPlace = move.getPromotionPiece();
-        }
-
-        if (move.isEnPassant()) {
-
-            int toRank = move.getToRank();
-            int toFile = move.getToFile();
-
-            // white pawn captures black pawn
-            if (piece == 'P') {
-                copy.setPiece(toRank + 1, toFile, '.');
-            }
-
-            // black pawn captures white pawn
-            if (piece == 'p') {
-                copy.setPiece(toRank - 1, toFile, '.');
-            }
-        }
-
-        // place piece
-        copy.setPiece(
-                move.getToRank(),
-                move.getToFile(),
-                pieceToPlace
-        );
-
-        // ----------------------------
-        // CASTLING HANDLING
-        // ----------------------------
-        if (piece == 'K') {
-
-            if (move.getFromFile() == 4 && move.getToFile() == 6) {
-                copy.setPiece(7, 7, '.');
-                copy.setPiece(7, 5, 'R');
-            }
-
-            if (move.getFromFile() == 4 && move.getToFile() == 2) {
-                copy.setPiece(7, 0, '.');
-                copy.setPiece(7, 3, 'R');
-            }
-        }
-
-        if (piece == 'k') {
-
-            if (move.getFromFile() == 4 && move.getToFile() == 6) {
-                copy.setPiece(0, 7, '.');
-                copy.setPiece(0, 5, 'r');
-            }
-
-            if (move.getFromFile() == 4 && move.getToFile() == 2) {
-                copy.setPiece(0, 0, '.');
-                copy.setPiece(0, 3, 'r');
-            }
-        }
-
-        // ----------------------------
-        // CASTLING RIGHTS UPDATE
-        // ----------------------------
-        updateCastlingRights(copy, piece, move, captured);
-
-        // ----------------------------
-        // EN PASSANT SQUARE UPDATE
-        // ----------------------------
+        // en passant square
         copy.setEnPassantSquare(-1);
 
         if (piece == 'P' || piece == 'p') {

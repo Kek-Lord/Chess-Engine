@@ -67,34 +67,31 @@ public class ChessUI extends Application {
         return (int)(Math.random() * moves.size()); // 0 to move list
     }
 
-    private int getBestMove(List<Move> moves) {
-        for (Move move : moves) {
+//    private int getBestMove(List<Move> moves) {
+//        for (Move move : moves) {
+//
+//        }
+//    }
 
-        }
-    }
-
-    private int search(int depth, MoveMaker moveMaker, Position position) {
-        List<Move> moves = generator.generateLegalMove(position);
-
-        for (Move move : moves) {
-            moveMaker.makeMove(position, move);
-            search(depth - 1, moveMaker, position);
-            position
-        }
-    }
+//    private int search(int depth, MoveMaker moveMaker, Position position) {
+//        List<Move> moves = generator.generateLegalMove(position);
+//
+//        for (Move move : moves) {
+//            moveMaker.makeMove(position, move);
+//            search(depth - 1, moveMaker, position);
+//            position
+//        }
+//    }
 
     private void updateEvaluationBar() {
 
         double eval = evaluation.calculateEvaluation(position);
 
-        // Clamp between -10 and +10
         eval = Math.max(-10, Math.min(10, eval));
 
-        // Convert [-10,+10] to [0,1]
         double percentage = (eval + 10) / 20.0;
 
         whiteBar.setHeight(BAR_HEIGHT * percentage);
-        // Keep the white section attached to the bottom
         StackPane.setAlignment(blackBar, Pos.BOTTOM_CENTER);
         StackPane.setAlignment(whiteBar, Pos.BOTTOM_CENTER);
     }
@@ -159,7 +156,6 @@ public class ChessUI extends Application {
         System.out.println(move);
         position = maker.makeMove(position, move);
 
-        // IMPORTANT: regenerate moves for new position
         moves = generator.generateLegalMove(position);
 
         drawBoard(position);
