@@ -120,4 +120,12 @@ public class Position {
     public void disableBlackQueenSideCastling() {
         blackQueenSideCastling = false;
     }
+
+    public int getEnPassantSquare() {
+        return enPassantSquare;
+    }
+
+    public void setEnPassantSquare(int enPassantSquare) {
+        this.enPassantSquare = enPassantSquare;
+    }
 }

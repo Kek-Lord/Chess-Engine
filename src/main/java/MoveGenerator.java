@@ -1,3 +1,4 @@
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,8 +45,8 @@ public class MoveGenerator {
             {1, -1}, {1, 0}, {1, 1}
     };
 
-    private int[] findKing(Position position) {
-        char king = position.isWhiteToMove() ? 'K' : 'k';
+    private int[] findKing(Position position, boolean whiteKing) {
+        char king = whiteKing ? 'K' : 'k';
 
         for (int rank = 0; rank < 8; rank++) {
             for (int file = 0; file < 8; file++) {
@@ -59,33 +60,23 @@ public class MoveGenerator {
 
 
     // so, we want to know if the king is under attack.
-    public boolean isKingUnderAttack(Position position) {
-
-        int[] kingPos = findKing(position);
+    public boolean isKingUnderAttack(Position position, boolean whiteKing) {
+        int[] kingPos = findKing(position, whiteKing);
 
         return isSquareAttacked(
                 position,
                 kingPos[0],
                 kingPos[1],
-                !position.isWhiteToMove()
+                !whiteKing
         );
     }
 
 
-    public List<Move> generateMove(Position position) {
+    public List<Move> generatePseudoLegalMove(Position position) {
         List<Move> moves = new ArrayList<>();
         int rank = 0;
         int file = 0;
-        if (isKingUnderAttack(position)) {
-            System.out.println("King under attack!");
-            int[] kingPos = findKing(position);
 
-            moves.addAll(generateKingMove(position,
-                    kingPos[0],
-                    kingPos[1]));
-
-            return moves;
-        }
         for (rank = 0; rank < 8; rank++) {
             for (file = 0; file < 8; file++) {
 
@@ -127,6 +118,26 @@ public class MoveGenerator {
         }
 
         return moves;
+    }
+
+    public List<Move> generateLegalMove(Position position) {
+        List<Move> legalMoves = new ArrayList<>();
+
+        List<Move> pseudoMoves = generatePseudoLegalMove(position);
+
+        MoveMaker moveMaker = new MoveMaker();
+
+        boolean movingWhite = position.isWhiteToMove();
+
+        for (Move move : pseudoMoves) {
+            Position next = moveMaker.makeMove(position, move);
+
+            if (!isKingUnderAttack(next, movingWhite)) {
+                legalMoves.add(move);
+            }
+        }
+
+        return legalMoves;
     }
 
     // moves for Bishop, Rook, and Queen
@@ -354,6 +365,28 @@ public class MoveGenerator {
             }
         }
 
+        int epSquare = position.getEnPassantSquare();
+
+        if (epSquare != -1) {
+            int epRank = epSquare / 8;
+            int epFile = epSquare % 8;
+
+            // the pawn must be on the rank just before the EP square
+            // and one file away
+            if (rank + direction == epRank && Math.abs(file - epFile) == 1) {
+
+                Move epMove = new Move(
+                        movingPiece,
+                        rank, file,
+                        epRank, epFile,
+                        isWhitePiece(movingPiece) ? 'p' : 'P',
+                        '\0',
+                        true
+                );
+                pawnMoves.add(epMove);
+            }
+        }
+
         return pawnMoves;
     }
 
@@ -471,6 +504,10 @@ public class MoveGenerator {
             if (sameColour(
                     movingPiece,
                     targetPiece)) {
+                continue;
+            }
+
+            if( isSquareAttacked(position, targetRank, targetFile, !position.isWhiteToMove())) {
                 continue;
             }
 
@@ -626,7 +663,7 @@ public class MoveGenerator {
 
     private boolean isSquareAttacked(Position position, int rank, int file, boolean byWhite) {
 
-        int pawnDir = byWhite ? -1 : 1;
+        int pawnDir = byWhite ? 1 : -1;
 
         int pawnRank = rank + pawnDir;
 
@@ -752,4 +789,6 @@ public class MoveGenerator {
     private boolean isBlackPiece(char piece) {
         return Character.isLowerCase(piece);
     }
+
+
 }

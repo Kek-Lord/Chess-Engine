@@ -9,8 +9,7 @@ public class Move {
     private char capturedPiece;
     private boolean castleMove;
 
-
-
+    private boolean enPassant;
 
     private char promotionPiece;
 
@@ -50,6 +49,20 @@ public class Move {
         this.toFile = toFile;
         this.capturedPiece = capturedPiece;
         this.promotionPiece = promotionPiece;
+    }
+
+    public Move(
+            char piece,
+            int fromRank,
+            int fromFile,
+            int toRank,
+            int toFile,
+            char capturedPiece,
+            char promotionPiece,
+            boolean enPassant) {
+
+        this(piece, fromRank, fromFile, toRank, toFile, capturedPiece, promotionPiece);
+        this.enPassant = enPassant;
     }
 
     @Override
@@ -92,6 +105,10 @@ public class Move {
 
     public void setCastleMove(boolean castleMove) {
         this.castleMove = castleMove;
+    }
+
+    public boolean isEnPassant() {
+        return enPassant;
     }
 
 }

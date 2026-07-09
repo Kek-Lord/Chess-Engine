@@ -3,24 +3,13 @@ import java.util.List;
 public class Main {
     public static void main (String[] args) throws InterruptedException {
         Position position = new Position();
-
         MoveGenerator generator = new MoveGenerator();
-        MoveMaker maker = new MoveMaker();
+        MoveMaker moveMaker = new MoveMaker();
 
-        for (int i = 0; i < 200; i++) {
+        Perft perft = new Perft(generator, moveMaker);
 
-            List<Move> moves =
-                    generator.generateMove(position);
+        FenConvertor convertor = new FenConvertor();
 
-            Move move =
-                    moves.get(0); // naive choice
-
-            Thread.sleep(1000);
-            System.out.println(move);
-
-            position = maker.makeMove(position, move);
-
-            position.printBoard();
-        }
+        System.out.println(perft.perft(position, 4));
     }
 }

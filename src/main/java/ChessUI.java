@@ -1,10 +1,12 @@
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -22,31 +24,79 @@ public class ChessUI extends Application {
 
     private final GridPane boardGrid = new GridPane();
     private Position position = new Position();
+
+    private static final double BAR_HEIGHT = TILE_SIZE * 8;
+    private final Evaluation evaluation = new Evaluation();
+
+    private final StackPane evalBar = new StackPane();
+    private final Rectangle blackBar = new Rectangle(30, BAR_HEIGHT);
+    private final Rectangle whiteBar = new Rectangle(30, BAR_HEIGHT);
+
+    private final Rectangle background = new Rectangle(30, BAR_HEIGHT);
+    private final Rectangle fill = new Rectangle(30, 0);
+
+
+    private final Label evalLabel = new Label();
     private List<Move> moves;
     private int moveIndex = 0;
 
     @Override
     public void start(Stage stage) {
-
+        whiteBar.setFill(Color.BLUE);
+        blackBar.setFill(Color.BLACK);
+        evalBar.getChildren().addAll(blackBar, whiteBar);
         drawBoard(position);
 
         Button nextMove = new Button("Next Move");
         nextMove.setOnAction(e -> playNextMove());
-
-        VBox root = new VBox(boardGrid, nextMove);
+        HBox boardArea = new HBox(15, boardGrid, evalBar);
+        VBox root = new VBox(boardArea, evalLabel, nextMove);
 
         Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.setTitle("Chess Engine Viewer");
         stage.show();
-
+        updateEvaluation();
+        updateEvaluationBar();
         MoveGenerator generator = new MoveGenerator();
-        moves = generator.generateMove(position);
+        moves = generator.generateLegalMove(position);
     }
 
     private int generateRandomMove(int moveIndex, List<Move> moves) {
         int randomNum;
         return (int)(Math.random() * moves.size()); // 0 to move list
+    }
+
+    private int getBestMove(List<Move> moves) {
+        for (Move move : moves) {
+
+        }
+    }
+
+    private int search(int depth, MoveMaker moveMaker, Position position) {
+        List<Move> moves = generator.generateLegalMove(position);
+
+        for (Move move : moves) {
+            moveMaker.makeMove(position, move);
+            search(depth - 1, moveMaker, position);
+            position
+        }
+    }
+
+    private void updateEvaluationBar() {
+
+        double eval = evaluation.calculateEvaluation(position);
+
+        // Clamp between -10 and +10
+        eval = Math.max(-10, Math.min(10, eval));
+
+        // Convert [-10,+10] to [0,1]
+        double percentage = (eval + 10) / 20.0;
+
+        whiteBar.setHeight(BAR_HEIGHT * percentage);
+        // Keep the white section attached to the bottom
+        StackPane.setAlignment(blackBar, Pos.BOTTOM_CENTER);
+        StackPane.setAlignment(whiteBar, Pos.BOTTOM_CENTER);
     }
 
     private void drawBoard(Position position) {
@@ -110,9 +160,11 @@ public class ChessUI extends Application {
         position = maker.makeMove(position, move);
 
         // IMPORTANT: regenerate moves for new position
-        moves = generator.generateMove(position);
+        moves = generator.generateLegalMove(position);
 
         drawBoard(position);
+        updateEvaluation();
+        updateEvaluationBar();
     }
 
     private String getImagePath(char piece) {
@@ -132,5 +184,10 @@ public class ChessUI extends Application {
         String color = Character.isUpperCase(piece) ? "white" : "black";
 
         return "pieces/" + color + "-" + type + ".png";
+    }
+
+    private void updateEvaluation() {
+        double eval = evaluation.calculateEvaluation(position);
+        evalLabel.setText(String.format("Evaluation: %.1f", eval));
     }
 }
