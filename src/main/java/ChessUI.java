@@ -13,6 +13,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 
 public class ChessUI extends Application {
@@ -24,6 +26,7 @@ public class ChessUI extends Application {
 
     private final GridPane boardGrid = new GridPane();
     private Position position = new Position();
+    private MoveList moveList = new MoveList();
 
     private static final double BAR_HEIGHT = TILE_SIZE * 8;
     private final Evaluation evaluation = new Evaluation();
@@ -38,7 +41,7 @@ public class ChessUI extends Application {
 
     private final Label evalLabel = new Label();
     private List<Move> moves;
-    private int moveIndex = 0;
+
 
     @Override
     public void start(Stage stage) {
@@ -48,9 +51,11 @@ public class ChessUI extends Application {
         drawBoard(position);
 
         Button nextMove = new Button("Next Move");
+        Button undoMove = new Button("Undo Move");
         nextMove.setOnAction(e -> playNextMove());
+        undoMove.setOnAction(e -> undoLastMove());
         HBox boardArea = new HBox(15, boardGrid, evalBar);
-        VBox root = new VBox(boardArea, evalLabel, nextMove);
+        VBox root = new VBox(boardArea, evalLabel, nextMove, undoMove);
 
         Scene scene = new Scene(root);
         stage.setScene(scene);
@@ -147,17 +152,31 @@ public class ChessUI extends Application {
 
     private void playNextMove() {
         System.out.println("Button Clicked");
+        int moveIndex = 0;
         if (moveIndex >= moves.size()){
             System.out.println("No More Moves :)");
             return;
         }
 
         Move move = moves.get(generateRandomMove(moveIndex, moves));
-        System.out.println(move);
         position = maker.makeMove(position, move);
+        moveList.addMove(move);
+        moveList.addPosition(position);
+        moveList.printPositionList();
 
         moves = generator.generateLegalMove(position);
 
+        drawBoard(position);
+        updateEvaluation();
+        updateEvaluationBar();
+    }
+
+
+    private void undoLastMove() {
+        System.out.println("Undo Last Move Button Clicked!");
+        // get the last position, then set the current position to that one
+        position = moveList.getLastPosition();
+        moves = generator.generateLegalMove(position);
         drawBoard(position);
         updateEvaluation();
         updateEvaluationBar();
