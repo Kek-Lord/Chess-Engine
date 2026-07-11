@@ -32,6 +32,7 @@ public class ChessUI extends Application {
     private final Evaluation evaluation = new Evaluation();
 
     private final StackPane evalBar = new StackPane();
+    private Stage stage;
     private final Rectangle blackBar = new Rectangle(30, BAR_HEIGHT);
     private final Rectangle whiteBar = new Rectangle(30, BAR_HEIGHT);
 
@@ -45,26 +46,74 @@ public class ChessUI extends Application {
 
     @Override
     public void start(Stage stage) {
+
+        this.stage = stage;
+
+        stage.setTitle("Chess Engine Viewer");
+
         whiteBar.setFill(Color.BLUE);
         blackBar.setFill(Color.BLACK);
         evalBar.getChildren().addAll(blackBar, whiteBar);
+
+        showMainMenu();
+
+        stage.show();
+    }
+
+    private void showMainMenu() {
+        Button watch = new Button("Watch AI");
+        Button play = new Button("Play AI");
+
+        watch.setOnAction(e -> showSideSelection(GameMode.WATCH_AI));
+        play.setOnAction(e -> showSideSelection(GameMode.PLAY_AI));
+
+        VBox root = new VBox(20, watch, play);
+        root.setAlignment(Pos.CENTER);
+
+        stage.setScene(new Scene(root, 400, 300));
+    }
+
+    private void showSideSelection(GameMode mode) {
+        Button white = new Button("White");
+        Button black = new Button("Black");
+        Button random = new Button("Random");
+
+        white.setOnAction(e -> startGame(mode, Side.WHITE));
+        black.setOnAction(e -> startGame(mode, Side.BLACK));
+        random.setOnAction(e -> startGame(mode, Side.RANDOM));
+
+        VBox root = new VBox(15, white, black, random);
+        root.setAlignment(Pos.CENTER);
+
+        stage.setScene(new Scene(root, 400, 300));
+    }
+
+    private void startGame(GameMode mode, Side side) {
+
+        position = new Position();
+        moveList = new MoveList();
+        moves = generator.generateLegalMove(position);
+
+        boardGrid.getChildren().clear();
+
         drawBoard(position);
 
         Button nextMove = new Button("Next Move");
         Button undoMove = new Button("Undo Move");
+
         nextMove.setOnAction(e -> playNextMove());
         undoMove.setOnAction(e -> undoLastMove());
+
         HBox boardArea = new HBox(15, boardGrid, evalBar);
         VBox root = new VBox(boardArea, evalLabel, nextMove, undoMove);
 
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.setTitle("Chess Engine Viewer");
-        stage.show();
+        stage.setScene(new Scene(root));
+
         updateEvaluation();
         updateEvaluationBar();
-        MoveGenerator generator = new MoveGenerator();
-        moves = generator.generateLegalMove(position);
+
+        System.out.println("Mode = " + mode);
+        System.out.println("Side = " + side);
     }
 
     private int generateRandomMove(int moveIndex, List<Move> moves) {
@@ -88,6 +137,7 @@ public class ChessUI extends Application {
 //        }
 //    }
 
+
     private void updateEvaluationBar() {
 
         double eval = evaluation.calculateEvaluation(position);
@@ -110,15 +160,21 @@ public class ChessUI extends Application {
 
                 StackPane tile = new StackPane();
 
+                // function to see which colour you are playing
+                // then change the colouring and piece placement since they are rotated?
                 boolean light = (rank + file) % 2 == 0;
 
                 Rectangle square = new Rectangle(TILE_SIZE, TILE_SIZE);
                 square.setFill(light ? Color.BEIGE : Color.BROWN);
 
 
-                square.setViewOrder(1);
+                square.setViewOrder(2);
 
                 tile.getChildren().add(square);
+
+                // a function is needed to get which perspective you are looking from
+
+
 
                 char piece = position.getPiece(rank, file);
 
@@ -138,7 +194,7 @@ public class ChessUI extends Application {
                     img.setFitHeight(TILE_SIZE);
                     img.setPreserveRatio(true);
 
-                    img.setViewOrder(0);
+                    img.setViewOrder(1);
 
                     tile.getChildren().add(img);
                 }
