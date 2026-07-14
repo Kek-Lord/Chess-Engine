@@ -22,10 +22,13 @@ public class ChessUI extends Application {
     private static final int TILE_SIZE = 80;
 
     private final MoveGenerator generator = new MoveGenerator();
+    private Side boardPerspective = Side.WHITE;
     private final MoveMaker maker = new MoveMaker();
+    private Position position = new Position();
+    private GameMode gameMode;
+    private Side playerSide;
 
     private final GridPane boardGrid = new GridPane();
-    private Position position = new Position();
     private MoveList moveList = new MoveList();
 
     private static final double BAR_HEIGHT = TILE_SIZE * 8;
@@ -70,7 +73,7 @@ public class ChessUI extends Application {
         VBox root = new VBox(20, watch, play);
         root.setAlignment(Pos.CENTER);
 
-        stage.setScene(new Scene(root, 400, 300));
+        stage.setScene(new Scene(root, 800, 800));
     }
 
     private void showSideSelection(GameMode mode) {
@@ -85,35 +88,52 @@ public class ChessUI extends Application {
         VBox root = new VBox(15, white, black, random);
         root.setAlignment(Pos.CENTER);
 
-        stage.setScene(new Scene(root, 400, 300));
+        stage.setScene(new Scene(root, 800, 800));
     }
 
     private void startGame(GameMode mode, Side side) {
 
+        if (side == Side.RANDOM) {
+            side = Math.random() < 0.5 ? Side.WHITE : Side.BLACK;
+        }
+
+        this.gameMode = mode;
+        this.playerSide = side;
+
+        this.boardPerspective = side;
+        initialiseGame();
+        showGameScene();
+
+    }
+
+    private void initialiseGame() {
+
         position = new Position();
         moveList = new MoveList();
         moves = generator.generateLegalMove(position);
+    }
 
-        boardGrid.getChildren().clear();
-
-        drawBoard(position);
+    private void showGameScene() {
 
         Button nextMove = new Button("Next Move");
         Button undoMove = new Button("Undo Move");
+        Button menu = new Button("Main Menu");
 
         nextMove.setOnAction(e -> playNextMove());
         undoMove.setOnAction(e -> undoLastMove());
+        menu.setOnAction(e -> showMainMenu());
 
         HBox boardArea = new HBox(15, boardGrid, evalBar);
-        VBox root = new VBox(boardArea, evalLabel, nextMove, undoMove);
+        VBox root = new VBox(15, boardArea, evalLabel,
+                new HBox(10, nextMove, undoMove, menu));
 
-        stage.setScene(new Scene(root));
+        root.setAlignment(Pos.CENTER);
 
+        stage.setScene(new Scene(root, 800, 800));
+
+        drawBoard(position);
         updateEvaluation();
         updateEvaluationBar();
-
-        System.out.println("Mode = " + mode);
-        System.out.println("Side = " + side);
     }
 
     private int generateRandomMove(int moveIndex, List<Move> moves) {
@@ -162,6 +182,7 @@ public class ChessUI extends Application {
 
                 // function to see which colour you are playing
                 // then change the colouring and piece placement since they are rotated?
+
                 boolean light = (rank + file) % 2 == 0;
 
                 Rectangle square = new Rectangle(TILE_SIZE, TILE_SIZE);
@@ -174,9 +195,14 @@ public class ChessUI extends Application {
 
                 // a function is needed to get which perspective you are looking from
 
+                int boardRank = rank;
+                int boardFile = file;
 
-
-                char piece = position.getPiece(rank, file);
+                if (boardPerspective == Side.BLACK) {
+                    boardRank = 7 - rank;
+                    boardFile = 7 - file;
+                }
+                char piece = position.getPiece(boardRank, boardFile);
 
                 if (piece != '.') {
 
