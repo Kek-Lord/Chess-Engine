@@ -117,15 +117,20 @@ public class ChessUI extends Application {
 
         Button nextMove = new Button("Next Move");
         Button undoMove = new Button("Undo Move");
+        Button flipBoard = new Button("Flip Board");
         Button menu = new Button("Main Menu");
 
         nextMove.setOnAction(e -> playNextMove());
         undoMove.setOnAction(e -> undoLastMove());
         menu.setOnAction(e -> showMainMenu());
+        flipBoard.setOnAction(e -> {
+            boardPerspective = (boardPerspective == Side.WHITE) ? Side.BLACK : Side.WHITE;
+            drawBoard(position);
+        });
 
         HBox boardArea = new HBox(15, boardGrid, evalBar);
         VBox root = new VBox(15, boardArea, evalLabel,
-                new HBox(10, nextMove, undoMove, menu));
+                new HBox(10, nextMove, undoMove, menu, flipBoard));
 
         root.setAlignment(Pos.CENTER);
 
@@ -135,6 +140,7 @@ public class ChessUI extends Application {
         updateEvaluation();
         updateEvaluationBar();
     }
+
 
     private int generateRandomMove(int moveIndex, List<Move> moves) {
         int randomNum;
