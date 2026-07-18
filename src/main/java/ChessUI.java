@@ -32,6 +32,7 @@ public class ChessUI extends Application {
     private final GridPane boardGrid = new GridPane();
     private MoveList moveList = new MoveList();
     private List<Move> selectedMoves = new ArrayList<>();
+    private Side currentTurn = Side.WHITE;
 
     private static final double BAR_HEIGHT = TILE_SIZE * 8;
     private final Evaluation evaluation = new Evaluation();
@@ -116,8 +117,18 @@ public class ChessUI extends Application {
     private void initialiseGame() {
 
         position = new Position();
+
         moveList = new MoveList();
+
+        moveList.addPosition(position);
+
         moves = generator.generateLegalMove(position);
+
+        selectedMoves.clear();
+        selectedRank = -1;
+        selectedFile = -1;
+
+        currentTurn = Side.WHITE;
     }
 
     private void showGameScene() {
@@ -201,7 +212,7 @@ public class ChessUI extends Application {
                     boardFile = 7 - file;
                 }
 
-                // Check whether this square is a legal destination
+
                 boolean isLegalDestination = false;
 
                 for (Move move : selectedMoves) {
@@ -213,7 +224,7 @@ public class ChessUI extends Application {
                     }
                 }
 
-                // Normal board colour
+
                 boolean light = (rank + file) % 2 == 0;
 
                 Rectangle square = new Rectangle(TILE_SIZE, TILE_SIZE);
@@ -265,28 +276,117 @@ public class ChessUI extends Application {
 
     private void handleSquareClicked(int rank, int file) {
 
+        // Only allow the player to move during their turn
         if (gameMode == GameMode.WATCH_AI) {
             return;
         }
 
-        char selectedPiece = position.getPiece(rank, file);
-
-        if (selectedPiece == '.') {
+        if (currentTurn != playerSide) {
             return;
         }
 
-        if (!isPlayerPiece(selectedPiece)) {
+
+        if (selectedRank != -1 && selectedFile != -1) {
+
+            for (Move move : selectedMoves) {
+
+                if (move.getToRank() == rank &&
+                        move.getToFile() == file) {
+
+                    position = maker.makeMove(position, move);
+
+                    moveList.addMove(move);
+                    moveList.addPosition(position);
+
+                    currentTurn = getOppositeSide(currentTurn);
+
+                    selectedMoves.clear();
+                    selectedRank = -1;
+                    selectedFile = -1;
+
+                    moves = generator.generateLegalMove(position);
+
+                    drawBoard(position);
+                    updateEvaluation();
+                    updateEvaluationBar();
+
+                    playAIMove();
+
+                    return;
+                }
+            }
+        }
+
+
+        char clickedPiece = position.getPiece(rank, file);
+
+        if (clickedPiece != '.' &&
+                isPlayerPiece(clickedPiece)) {
+
+            selectedRank = rank;
+            selectedFile = file;
+
+            selectedMoves = getMovesAtTile(rank, file);
+
+            drawBoard(position);
+
             return;
         }
 
-        selectedRank = rank;
-        selectedFile = file;
 
-        selectedMoves = getMovesAtTile(rank, file);
-
-        System.out.println("Legal moves: " + selectedMoves.size());
+        selectedMoves.clear();
+        selectedRank = -1;
+        selectedFile = -1;
 
         drawBoard(position);
+    }
+
+    private Side getOppositeSide(Side side) {
+
+        if (side == Side.WHITE) {
+            return Side.BLACK;
+        }
+
+        return Side.WHITE;
+    }
+
+    private void playAIMove() {
+
+        if (gameMode != GameMode.PLAY_AI) {
+            return;
+        }
+
+        if (currentTurn != getOppositeSide(playerSide)) {
+            return;
+        }
+
+        List<Move> aiMoves =
+                generator.generateLegalMove(position);
+
+        if (aiMoves.isEmpty()) {
+            System.out.println("No legal AI moves.");
+            return;
+        }
+
+        int randomIndex =
+                (int) (Math.random() * aiMoves.size());
+
+        Move aiMove = aiMoves.get(randomIndex);
+
+        position = maker.makeMove(position, aiMove);
+
+        moveList.addMove(aiMove);
+        moveList.addPosition(position);
+
+        currentTurn = playerSide;
+
+        moves = generator.generateLegalMove(position);
+
+        drawBoard(position);
+        updateEvaluation();
+        updateEvaluationBar();
+
+        System.out.println("AI played a move.");
     }
 
     private boolean isPlayerPiece(char piece) {
@@ -344,10 +444,17 @@ public class ChessUI extends Application {
 
 
     private void undoLastMove() {
+
         System.out.println("Undo Last Move Button Clicked!");
-        // get the last position, then set the current position to that one
+
         position = moveList.getLastPosition();
+
         moves = generator.generateLegalMove(position);
+
+        selectedMoves.clear();
+        selectedRank = -1;
+        selectedFile = -1;
+
         drawBoard(position);
         updateEvaluation();
         updateEvaluationBar();
