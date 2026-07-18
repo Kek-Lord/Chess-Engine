@@ -14,6 +14,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class ChessUI extends Application {
 
     private final GridPane boardGrid = new GridPane();
     private MoveList moveList = new MoveList();
+    private List<Move> selectedMoves = new ArrayList<>();
 
     private static final double BAR_HEIGHT = TILE_SIZE * 8;
     private final Evaluation evaluation = new Evaluation();
@@ -45,6 +47,11 @@ public class ChessUI extends Application {
 
     private final Label evalLabel = new Label();
     private List<Move> moves;
+
+    private int selectedRank = -1;
+    private int selectedFile = -1;
+
+
 
 
     @Override
@@ -186,21 +193,6 @@ public class ChessUI extends Application {
 
                 StackPane tile = new StackPane();
 
-                // function to see which colour you are playing
-                // then change the colouring and piece placement since they are rotated?
-
-                boolean light = (rank + file) % 2 == 0;
-
-                Rectangle square = new Rectangle(TILE_SIZE, TILE_SIZE);
-                square.setFill(light ? Color.BEIGE : Color.BROWN);
-
-
-                square.setViewOrder(2);
-
-                tile.getChildren().add(square);
-
-                // a function is needed to get which perspective you are looking from
-
                 int boardRank = rank;
                 int boardFile = file;
 
@@ -208,6 +200,40 @@ public class ChessUI extends Application {
                     boardRank = 7 - rank;
                     boardFile = 7 - file;
                 }
+
+                // Check whether this square is a legal destination
+                boolean isLegalDestination = false;
+
+                for (Move move : selectedMoves) {
+                    if (move.getToRank() == boardRank &&
+                            move.getToFile() == boardFile) {
+
+                        isLegalDestination = true;
+                        break;
+                    }
+                }
+
+                // Normal board colour
+                boolean light = (rank + file) % 2 == 0;
+
+                Rectangle square = new Rectangle(TILE_SIZE, TILE_SIZE);
+
+                if (isLegalDestination) {
+                    square.setFill(Color.GREEN);
+                } else {
+                    square.setFill(light ? Color.BEIGE : Color.BROWN);
+                }
+
+                square.setViewOrder(2);
+                tile.getChildren().add(square);
+
+                int selectedRank = boardRank;
+                int selectedFile = boardFile;
+
+                tile.setOnMouseClicked(e -> {
+                    handleSquareClicked(selectedRank, selectedFile);
+                });
+
                 char piece = position.getPiece(boardRank, boardFile);
 
                 if (piece != '.') {
@@ -217,23 +243,80 @@ public class ChessUI extends Application {
 
                     if (stream == null) {
                         System.out.println("Missing image: " + path);
-                        continue;
+                    } else {
+
+                        ImageView img = new ImageView(new Image(stream));
+
+                        img.setFitWidth(TILE_SIZE);
+                        img.setFitHeight(TILE_SIZE);
+                        img.setPreserveRatio(true);
+                        img.setViewOrder(1);
+
+                        tile.getChildren().add(img);
                     }
-
-                    ImageView img = new ImageView(new Image(stream));
-
-                    img.setFitWidth(TILE_SIZE);
-                    img.setFitHeight(TILE_SIZE);
-                    img.setPreserveRatio(true);
-
-                    img.setViewOrder(1);
-
-                    tile.getChildren().add(img);
                 }
 
                 tile.setPrefSize(TILE_SIZE, TILE_SIZE);
 
                 boardGrid.add(tile, file, rank);
+            }
+        }
+    }
+
+    private void handleSquareClicked(int rank, int file) {
+
+        if (gameMode == GameMode.WATCH_AI) {
+            return;
+        }
+
+        char selectedPiece = position.getPiece(rank, file);
+
+        if (selectedPiece == '.') {
+            return;
+        }
+
+        if (!isPlayerPiece(selectedPiece)) {
+            return;
+        }
+
+        selectedRank = rank;
+        selectedFile = file;
+
+        selectedMoves = getMovesAtTile(rank, file);
+
+        System.out.println("Legal moves: " + selectedMoves.size());
+
+        drawBoard(position);
+    }
+
+    private boolean isPlayerPiece(char piece) {
+        if (playerSide == Side.WHITE) {
+            return Character.isUpperCase(piece);
+        }
+
+        if (playerSide == Side.BLACK) {
+            return Character.isLowerCase(piece);
+        }
+
+        return false;
+    }
+
+    private List<Move> getMovesAtTile(int rank, int file) {
+        List<Move> movesAtTile = new ArrayList<>();
+
+        for (Move move : moves) {
+            if (move.getFromRank() == rank && move.getFromFile() == file){
+                movesAtTile.add(move);
+            }
+        }
+
+        return movesAtTile;
+    }
+
+    private void setGridTileColour(int rank, int file) {
+        for (int i = 0; i < rank; i++) {
+            for(int j = 0; i < file; j++) {
+
             }
         }
     }
