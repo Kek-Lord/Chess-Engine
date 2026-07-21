@@ -1,4 +1,9 @@
+import java.util.List;
+
 public class Evaluation {
+    MoveGenerator moveGenerator = new MoveGenerator();
+    MoveMaker moveMaker = new MoveMaker();
+    MoveList moveList = new MoveList();
 
     public double calculateEvaluation(Position position) {
         double eval = 0;
@@ -39,5 +44,32 @@ public class Evaluation {
         }
 
         return eval;
+    }
+
+    public double search(Position position, int depth) {
+        if (depth == 0) {
+            return calculateEvaluation(position);
+        }
+
+        List<Move> moves = moveGenerator.generateLegalMove(position);
+        if (moves.isEmpty()) {
+            if (moveGenerator.isKingUnderAttack(position, position.isWhiteToMove())) {
+                return Double.NEGATIVE_INFINITY;
+            }
+            return 0;
+        }
+
+        double bestEvaluation = Double.NEGATIVE_INFINITY;
+
+        for (Move move : moves) {
+            moveMaker.makeMove(position, move);
+            double evaluation = -search(position, depth - 1);
+            if (evaluation > bestEvaluation) {
+                bestEvaluation = evaluation;
+            }
+            moveList.getLastPosition();
+        }
+
+        return bestEvaluation;
     }
 }
