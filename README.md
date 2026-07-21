@@ -18,3 +18,12 @@ This chess engine is implemented using JavaFX and can be run using the maven sid
 - Alpha-Beta pruning
 - Board and Piece appearance customisation
 - API to allow users to build bots for this framework
+
+## Relevant Screenshots
+
+Running the program
+<img width="363" height="446" alt="image" src="https://github.com/user-attachments/assets/6d0d5beb-2fe0-4f9c-a024-e3204a3000ee" />
+
+Screenshot of GUI
+<img width="798" height="829" alt="image" src="https://github.com/user-attachments/assets/1d7482ab-b003-454e-b8fe-fe3963de0831" />
+
