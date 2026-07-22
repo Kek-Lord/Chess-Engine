@@ -360,33 +360,36 @@ public class ChessUI extends Application {
             return;
         }
 
-        List<Move> aiMoves =
-                generator.generateLegalMove(position);
+        int searchDepth = 3;
 
-        if (aiMoves.isEmpty()) {
+        Move aiMove =
+                evaluation.findBestMove(position, searchDepth);
+
+        if (aiMove == null) {
             System.out.println("No legal AI moves.");
             return;
         }
 
-        int randomIndex =
-                (int) (Math.random() * aiMoves.size());
-
-        Move aiMove = aiMoves.get(randomIndex);
-
-        position = maker.makeMove(position, aiMove);
+        position =
+                maker.makeMove(position, aiMove);
 
         moveList.addMove(aiMove);
         moveList.addPosition(position);
 
         currentTurn = playerSide;
 
-        moves = generator.generateLegalMove(position);
+        moves =
+                generator.generateLegalMove(position);
 
         drawBoard(position);
         updateEvaluation();
         updateEvaluationBar();
 
-        System.out.println("AI played a move.");
+        System.out.println("AI played: " +
+                aiMove.getFromRank() + "," +
+                aiMove.getFromFile() + " -> " +
+                aiMove.getToRank() + "," +
+                aiMove.getToFile());
     }
 
     private boolean isPlayerPiece(char piece) {

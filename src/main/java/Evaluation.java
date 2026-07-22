@@ -1,9 +1,9 @@
 import java.util.List;
 
 public class Evaluation {
+
     MoveGenerator moveGenerator = new MoveGenerator();
     MoveMaker moveMaker = new MoveMaker();
-    MoveList moveList = new MoveList();
 
     public double calculateEvaluation(Position position) {
         double eval = 0;
@@ -36,9 +36,6 @@ public class Evaluation {
 
                     case 'k':
                         break;
-
-                    default:
-                        break;
                 }
             }
         }
@@ -47,29 +44,82 @@ public class Evaluation {
     }
 
     public double search(Position position, int depth) {
-        if (depth == 0) {
-            return calculateEvaluation(position);
-        }
 
-        List<Move> moves = moveGenerator.generateLegalMove(position);
+        List<Move> moves =
+                moveGenerator.generateLegalMove(position);
+
         if (moves.isEmpty()) {
-            if (moveGenerator.isKingUnderAttack(position, position.isWhiteToMove())) {
+
+            if (moveGenerator.isKingUnderAttack(
+                    position,
+                    position.isWhiteToMove()
+            )) {
                 return Double.NEGATIVE_INFINITY;
             }
+
             return 0;
+        }
+
+        if (depth == 0) {
+            return evaluate(position);
         }
 
         double bestEvaluation = Double.NEGATIVE_INFINITY;
 
         for (Move move : moves) {
-            moveMaker.makeMove(position, move);
-            double evaluation = -search(position, depth - 1);
-            if (evaluation > bestEvaluation) {
-                bestEvaluation = evaluation;
-            }
-            moveList.getLastPosition();
+
+            Position childPosition =
+                    moveMaker.makeMove(position, move);
+
+            double evaluation =
+                    -search(childPosition, depth - 1);
+
+            bestEvaluation =
+                    Math.max(bestEvaluation, evaluation);
         }
 
         return bestEvaluation;
+    }
+
+    public double evaluate(Position position) {
+
+        double eval = calculateEvaluation(position);
+
+        if (position.isWhiteToMove()) {
+            return eval;
+        } else {
+            return -eval;
+        }
+    }
+
+    public Move findBestMove(Position position, int depth) {
+
+        List<Move> moves =
+                moveGenerator.generateLegalMove(position);
+
+        if (moves.isEmpty()) {
+            return null;
+        }
+
+        Move bestMove = null;
+        double bestEvaluation = Double.NEGATIVE_INFINITY;
+
+        for (Move move : moves) {
+
+            // Make the candidate move
+            Position childPosition =
+                    moveMaker.makeMove(position, move);
+
+            // Search from the opponent's position
+            double evaluation =
+                    -search(childPosition, depth - 1);
+
+            if (evaluation > bestEvaluation) {
+                bestEvaluation = evaluation;
+                bestMove = move;
+            }
+        }
+
+        return bestMove;
     }
 }
