@@ -43,7 +43,7 @@ public class Evaluation {
         return eval;
     }
 
-    public double search(Position position, int depth) {
+    public double search(Position position, int depth, double alpha, double beta) {
 
         List<Move> moves =
                 moveGenerator.generateLegalMove(position);
@@ -72,10 +72,16 @@ public class Evaluation {
                     moveMaker.makeMove(position, move);
 
             double evaluation =
-                    -search(childPosition, depth - 1);
+                    -search(childPosition, depth - 1, -beta, -alpha);
 
             bestEvaluation =
                     Math.max(bestEvaluation, evaluation);
+
+            alpha = Math.max(alpha, evaluation);
+
+            if (alpha >= beta) {
+                break;
+            }
         }
 
         return bestEvaluation;
@@ -104,6 +110,9 @@ public class Evaluation {
         Move bestMove = null;
         double bestEvaluation = Double.NEGATIVE_INFINITY;
 
+        double alpha = Double.NEGATIVE_INFINITY;
+        double beta = Double.POSITIVE_INFINITY;
+
         for (Move move : moves) {
 
             // Make the candidate move
@@ -112,12 +121,14 @@ public class Evaluation {
 
             // Search from the opponent's position
             double evaluation =
-                    -search(childPosition, depth - 1);
+                    -search(childPosition, depth - 1, -beta, -alpha);
 
             if (evaluation > bestEvaluation) {
                 bestEvaluation = evaluation;
                 bestMove = move;
             }
+
+            alpha = Math.max(alpha, evaluation);
         }
 
         return bestMove;

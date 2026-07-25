@@ -360,11 +360,16 @@ public class ChessUI extends Application {
             return;
         }
 
-        int searchDepth = 3;
+        int searchDepth = 4;
+        long start = System.nanoTime();
 
         Move aiMove =
                 evaluation.findBestMove(position, searchDepth);
+        long end = System.nanoTime();
+        long elapsedTime = end - start;
+        double elapsedMilliSecond = elapsedTime / 1_000_000.0;
 
+        System.out.println("Move search time: " + elapsedMilliSecond + "ms");
         if (aiMove == null) {
             System.out.println("No legal AI moves.");
             return;
@@ -416,14 +421,6 @@ public class ChessUI extends Application {
         return movesAtTile;
     }
 
-    private void setGridTileColour(int rank, int file) {
-        for (int i = 0; i < rank; i++) {
-            for(int j = 0; i < file; j++) {
-
-            }
-        }
-    }
-
     private void playNextMove() {
         System.out.println("Button Clicked");
         int moveIndex = 0;
@@ -432,9 +429,9 @@ public class ChessUI extends Application {
             return;
         }
 
-        Move move = moves.get(generateRandomMove(moveIndex, moves));
-        position = maker.makeMove(position, move);
-        moveList.addMove(move);
+        Move aiMove = evaluation.findBestMove(position, 3);
+        position = maker.makeMove(position, aiMove);
+        moveList.addMove(aiMove);
         moveList.addPosition(position);
         moveList.printPositionList();
 
