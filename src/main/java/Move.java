@@ -110,5 +110,11 @@ public class Move {
     public boolean isEnPassant() {
         return enPassant;
     }
+    public boolean isCapture(char capturedPiece) {
+        if (capturedPiece != '.') {
+            return true;
+        }
 
+        return false;
+    }
 }

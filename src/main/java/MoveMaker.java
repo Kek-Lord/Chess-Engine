@@ -4,7 +4,6 @@ import java.util.List;
 
 public class MoveMaker {
 
-
     public Position makeMove(Position position, Move move) {
 
         Position copy = new Position(position);
@@ -18,6 +17,7 @@ public class MoveMaker {
                 move.getToRank(),
                 move.getToFile()
         );
+
 
         // clear from-square
         copy.setPiece(
@@ -34,7 +34,6 @@ public class MoveMaker {
 
         //en passant capture handling
         if (move.isEnPassant()) {
-
             int toRank = move.getToRank();
             int toFile = move.getToFile();
 

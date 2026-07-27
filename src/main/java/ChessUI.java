@@ -1,4 +1,6 @@
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -13,6 +15,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
+import javax.print.attribute.standard.Media;
+import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -21,6 +25,7 @@ import java.util.List;
 public class ChessUI extends Application {
 
     private static final int TILE_SIZE = 80;
+    private final SoundManager soundManager = new SoundManager();
 
     private final MoveGenerator generator = new MoveGenerator();
     private Side boardPerspective = Side.WHITE;
@@ -241,9 +246,7 @@ public class ChessUI extends Application {
                 int selectedRank = boardRank;
                 int selectedFile = boardFile;
 
-                tile.setOnMouseClicked(e -> {
-                    handleSquareClicked(selectedRank, selectedFile);
-                });
+                tile.setOnMouseClicked(e -> handleSquareClicked(selectedRank, selectedFile));
 
                 char piece = position.getPiece(boardRank, boardFile);
 
@@ -298,6 +301,11 @@ public class ChessUI extends Application {
                     moveList.addMove(move);
                     moveList.addPosition(position);
 
+                    if (move.isCapture(move.getCapturedPiece())) {
+                        soundManager.playCapture();
+                    } else {
+                        soundManager.playMove();
+                    }
                     currentTurn = getOppositeSide(currentTurn);
 
                     selectedMoves.clear();
@@ -360,41 +368,89 @@ public class ChessUI extends Application {
             return;
         }
 
-        int searchDepth = 4;
-        long start = System.nanoTime();
+        Task<Move> aiTask = new Task<>() {
 
-        Move aiMove =
-                evaluation.findBestMove(position, searchDepth);
-        long end = System.nanoTime();
-        long elapsedTime = end - start;
-        double elapsedMilliSecond = elapsedTime / 1_000_000.0;
+            @Override
+            protected Move call() {
 
-        System.out.println("Move search time: " + elapsedMilliSecond + "ms");
-        if (aiMove == null) {
-            System.out.println("No legal AI moves.");
-            return;
-        }
+                int searchDepth = 5;
 
-        position =
-                maker.makeMove(position, aiMove);
+                long start = System.nanoTime();
 
-        moveList.addMove(aiMove);
-        moveList.addPosition(position);
+                Move bestMove = evaluation.findBestMove(position, searchDepth);
 
-        currentTurn = playerSide;
+                long end = System.nanoTime();
 
-        moves =
-                generator.generateLegalMove(position);
+                double elapsed =
+                        (end - start) / 1_000_000.0;
 
-        drawBoard(position);
-        updateEvaluation();
-        updateEvaluationBar();
+                System.out.println(
+                        "Move search time: " + elapsed + "ms"
+                );
 
-        System.out.println("AI played: " +
-                aiMove.getFromRank() + "," +
-                aiMove.getFromFile() + " -> " +
-                aiMove.getToRank() + "," +
-                aiMove.getToFile());
+                return bestMove;
+            }
+        };
+
+
+        aiTask.setOnSucceeded(e -> {
+
+            Move aiMove = aiTask.getValue();
+
+            if (aiMove == null) {
+                System.out.println("No legal AI moves.");
+                return;
+            }
+
+
+            Platform.runLater(() -> {
+
+                char capturedPiece = aiMove.getCapturedPiece();
+
+                if (aiMove.isCapture(capturedPiece)) {
+                    soundManager.playCapture();
+                } else {
+                    soundManager.playMove();
+                }
+
+
+                position =
+                        maker.makeMove(position, aiMove);
+
+
+                moveList.addMove(aiMove);
+                moveList.addPosition(position);
+
+
+                currentTurn = playerSide;
+
+
+                moves =
+                        generator.generateLegalMove(position);
+
+
+                drawBoard(position);
+                updateEvaluation();
+                updateEvaluationBar();
+
+
+                System.out.println(
+                        "AI played: " +
+                                aiMove.getFromRank() + "," +
+                                aiMove.getFromFile() +
+                                " -> " +
+                                aiMove.getToRank() + "," +
+                                aiMove.getToFile()
+                );
+
+            });
+
+        });
+
+
+        Thread aiThread = new Thread(aiTask);
+        aiThread.setDaemon(true);
+        aiThread.start();
     }
 
     private boolean isPlayerPiece(char piece) {
