@@ -54,7 +54,7 @@ public class Evaluation {
                     position,
                     position.isWhiteToMove()
             )) {
-                return Double.NEGATIVE_INFINITY;
+                return -1000000;
             }
 
             return 0;
@@ -64,7 +64,7 @@ public class Evaluation {
             return evaluate(position);
         }
 
-        double bestEvaluation = Double.NEGATIVE_INFINITY;
+        double bestEvaluation = -1000000;
 
         for (Move move : moves) {
 
@@ -108,10 +108,11 @@ public class Evaluation {
         }
 
         Move bestMove = null;
-        double bestEvaluation = Double.NEGATIVE_INFINITY;
+        double bestEvaluation = -1000000;
 
-        double alpha = Double.NEGATIVE_INFINITY;
-        double beta = Double.POSITIVE_INFINITY;
+        double alpha = -1000000;
+        double beta = 1000000;
+        boolean firstMove = true;
 
         for (Move move : moves) {
 
@@ -123,9 +124,10 @@ public class Evaluation {
             double evaluation =
                     -search(childPosition, depth - 1, -beta, -alpha);
 
-            if (evaluation > bestEvaluation) {
+            if(firstMove || evaluation > bestEvaluation) {
                 bestEvaluation = evaluation;
                 bestMove = move;
+                firstMove = false;
             }
 
             alpha = Math.max(alpha, evaluation);
