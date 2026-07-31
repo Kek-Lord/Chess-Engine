@@ -45,16 +45,14 @@ public class Evaluation {
 
     public double search(Position position, int depth, double alpha, double beta) {
 
-        List<Move> moves =
-                moveGenerator.generateLegalMove(position);
+        List<Move> moves = moveGenerator.generateLegalMove(position);
 
         if (moves.isEmpty()) {
-
             if (moveGenerator.isKingUnderAttack(
                     position,
                     position.isWhiteToMove()
             )) {
-                return -1000000;
+                return -1000000 - depth;
             }
 
             return 0;
@@ -67,16 +65,12 @@ public class Evaluation {
         double bestEvaluation = -1000000;
 
         for (Move move : moves) {
-
-            Position childPosition =
-                    moveMaker.makeMove(position, move);
+            Position childPosition = moveMaker.makeMove(position, move);
 
             double evaluation =
                     -search(childPosition, depth - 1, -beta, -alpha);
 
-            bestEvaluation =
-                    Math.max(bestEvaluation, evaluation);
-
+            bestEvaluation = Math.max(bestEvaluation, evaluation);
             alpha = Math.max(alpha, evaluation);
 
             if (alpha >= beta) {

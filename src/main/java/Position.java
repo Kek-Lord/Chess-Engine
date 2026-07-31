@@ -1,5 +1,5 @@
 public class Position {
-    private char[][] board;
+    private final char[][] board;
     private boolean whiteToMove;
     private boolean whiteKingSideCastling;
     private boolean whiteQueenSideCastling;
@@ -8,8 +8,10 @@ public class Position {
     private boolean blackQueenSideCastling;
 
     private int enPassantSquare;
-    private int halfMoveClock;
-    private int fullMoveNumber;
+    private final int halfMoveClock;
+    private final int fullMoveNumber;
+    private int whiteKingSquare;
+    private int blackKingSquare;
 
     public Position() {
         board = new char[][]{
@@ -34,6 +36,9 @@ public class Position {
 
         halfMoveClock = 0;
         fullMoveNumber = 1;
+
+        whiteKingSquare = 60;
+        blackKingSquare = 4;
     }
 
     public void printBoard() {
@@ -46,6 +51,14 @@ public class Position {
         }
         System.out.println("-----------------");
         System.out.println("0 1 2 3 4 5 6 7\n");
+    }
+
+    public int getWhiteKingSquare() {
+        return whiteKingSquare;
+    }
+
+    public int getBlackKingSquare() {
+        return blackKingSquare;
     }
 
     public Position(Position other) {
@@ -73,6 +86,8 @@ public class Position {
 
         this.halfMoveClock = other.halfMoveClock;
         this.fullMoveNumber = other.fullMoveNumber;
+        this.whiteKingSquare = other.whiteKingSquare;
+        this.blackKingSquare = other.blackKingSquare;
     }
 
     public boolean isWhiteToMove(){
@@ -127,5 +142,13 @@ public class Position {
 
     public void setEnPassantSquare(int enPassantSquare) {
         this.enPassantSquare = enPassantSquare;
+    }
+
+    public void setWhiteKingSquare(int square) {
+        whiteKingSquare = square;
+    }
+
+    public void setBlackKingSquare(int square) {
+        blackKingSquare = square;
     }
 }

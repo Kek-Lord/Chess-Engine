@@ -55,6 +55,19 @@ public class MoveMaker {
                 pieceToPlace
         );
 
+        if (piece == 'K') {
+            copy.setWhiteKingSquare(
+                    move.getToRank() * 8 + move.getToFile()
+            );
+        }
+
+        if (piece == 'k') {
+            copy.setBlackKingSquare(
+                    move.getToRank() * 8 + move.getToFile()
+            );
+        }
+
+
         // castling
         if (piece == 'K') {
 

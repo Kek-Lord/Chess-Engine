@@ -45,28 +45,18 @@ public class MoveGenerator {
             {1, -1}, {1, 0}, {1, 1}
     };
 
-    private int[] findKing(Position position, boolean whiteKing) {
-        char king = whiteKing ? 'K' : 'k';
-
-        for (int rank = 0; rank < 8; rank++) {
-            for (int file = 0; file < 8; file++) {
-                if (position.getPiece(rank, file) == king) {
-                    return new int[]{rank, file};
-                }
-            }
-        }
-        return null;
-    }
-
 
     // so, we want to know if the king is under attack.
     public boolean isKingUnderAttack(Position position, boolean whiteKing) {
-        int[] kingPos = findKing(position, whiteKing);
+        int square = whiteKing ? position.getWhiteKingSquare() : position.getBlackKingSquare();
+
+        int rank = square / 8;
+        int file = square % 8;
 
         return isSquareAttacked(
                 position,
-                kingPos[0],
-                kingPos[1],
+                rank,
+                file,
                 !whiteKing
         );
     }
